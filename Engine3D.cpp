@@ -48,7 +48,7 @@ bool Engine3D::onUserCreate() {
     float fNear = 0.1f;
     float fFar = 1000.0f;
     float fFov = 90.0f;
-    float fAspectRatio = 800 / 800;
+    float fAspectRatio = window.getSize().x / window.getSize().y;
     float fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
 
     matProj.m[0][0] = fAspectRatio * fFovRad;
@@ -88,14 +88,10 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
     for(auto tri : meshCube.tris) {
         Triangle triProjected, triTranslated, triRotatedZ, triRotatedZX;
         // Rotate Z Axis:
-        MultiplyMatrixVector(tri.p[0], triRotatedZ.p[0], matRotZ);
-        MultiplyMatrixVector(tri.p[1], triRotatedZ.p[1], matRotZ);
-        MultiplyMatrixVector(tri.p[2], triRotatedZ.p[2], matRotZ);
+        triRotatedZ = tri.rotate(matRotZ);
 
         // Rotate X Axis:
-        MultiplyMatrixVector(triRotatedZ.p[0], triRotatedZX.p[0], matRotX);
-        MultiplyMatrixVector(triRotatedZ.p[1], triRotatedZX.p[1], matRotX);
-        MultiplyMatrixVector(triRotatedZ.p[2], triRotatedZX.p[2], matRotX);
+        triRotatedZX = triRotatedZ.rotate(matRotX);
 
         //Offset:
         triTranslated = triRotatedZX;

@@ -16,3 +16,11 @@ Triangle Triangle::rotate(const mat4x4 &matrix) {
     }
     return rotated;
 }
+
+Triangle Triangle::offsetZ(const float units) {
+    Triangle offset;
+    for (int i = 0; i < 3; i++) {
+        offset.p[i].z += units;
+    }
+    return offset;
+}

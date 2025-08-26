@@ -13,6 +13,7 @@ struct Triangle {
     Vec3D p[3]; 
 
     Triangle rotate(const mat4x4 &matrix);
+    Triangle offsetZ(const float units);
 };
 
 struct Mesh { std::vector<Triangle> tris; };

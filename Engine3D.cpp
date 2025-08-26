@@ -101,11 +101,8 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
         // Rotate X Axis:
         triRotatedZX = triRotatedZ.rotate(matRotX);
 
-        //Offset:
-        triTranslated = triRotatedZX;
-        triTranslated.p[0].z = triRotatedZX.p[0].z + 3.0f;
-        triTranslated.p[1].z = triRotatedZX.p[1].z + 3.0f;
-        triTranslated.p[2].z = triRotatedZX.p[2].z + 3.0f;
+        //Offset (only to Z so we are not in the cube):
+        triTranslated = triRotatedZX.offsetZ(3.0f);
 
         // Project triangles from 3D --> 2D
         MultiplyMatrixVector(triTranslated.p[0], triProjected.p[0], matProj);

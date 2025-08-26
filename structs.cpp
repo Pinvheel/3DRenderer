@@ -17,10 +17,34 @@ Triangle Triangle::rotate(const mat4x4 &matrix) {
     return rotated;
 }
 
+Triangle Triangle::offsetX(const float units) {
+    Triangle offset;
+    for (int i = 0; i < 3; i++) {
+        offset.p[i].x = p[i].x + units;
+    }
+    return offset;
+}
+
+Triangle Triangle::offsetY(const float units) {
+    Triangle offset;
+    for (int i = 0; i < 3; i++) {
+        offset.p[i].y = p[i].y + units;
+    }
+    return offset;
+}
+
 Triangle Triangle::offsetZ(const float units) {
     Triangle offset;
     for (int i = 0; i < 3; i++) {
-        offset.p[i].z += units;
+        offset.p[i].z = p[i].z + units;
     }
     return offset;
+}
+
+Triangle Triangle::project(const mat4x4 &matrix) {
+    Triangle projected;
+    for (int i = 0; i < 3; i++) {
+        MultiplyMatrixVector(p[i], projected.p[i], matrix);
+    }
+    return projected;
 }

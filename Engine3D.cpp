@@ -105,9 +105,7 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
         triTranslated = triRotatedZX.offsetZ(3.0f);
 
         // Project triangles from 3D --> 2D
-        MultiplyMatrixVector(triTranslated.p[0], triProjected.p[0], matProj);
-        MultiplyMatrixVector(triTranslated.p[1], triProjected.p[1], matProj);
-        MultiplyMatrixVector(triTranslated.p[2], triProjected.p[2], matProj);
+        triProjected = triTranslated.project(matProj);
 
         // Scale into view 
         triProjected.p[0].x += 1.0f; triProjected.p[0].y += 1.0f;

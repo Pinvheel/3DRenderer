@@ -64,7 +64,7 @@ bool Engine3D::onUserCreate() {
 bool Engine3D::onUserUpdate(float fElapsedTime) {
     window.clear(sf::Color::Black);
     // Set up rotation matrices
-    mat4x4 matRotZ, matRotX;
+    mat4x4 matRotZ, matRotX, matRotY;
     fTheta += 1.0f * fElapsedTime;
 
     // Rotation Z
@@ -82,6 +82,14 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
     matRotX.m[2][1] = -sinf(fTheta * 0.5f);
     matRotX.m[2][2] = cosf(fTheta * 0.5f);
     matRotX.m[3][3] = 1;
+
+    // Rotation Y
+    matRotY.m[0][0] =  cosf(fTheta * 0.5f);
+    matRotY.m[0][2] =  sinf(fTheta * 0.5f);
+    matRotY.m[1][1] =  1.0f;
+    matRotY.m[2][0] = -sinf(fTheta * 0.5f);
+    matRotY.m[2][2] =  cosf(fTheta * 0.5f);
+    matRotY.m[3][3] =  1.0f;
 
     Vec3D cubeCenter = {0.5f, 0.5f, 0.5f};
     // Draw triangles:
@@ -136,15 +144,4 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
 
     }
     return true;
-}
-
-void Engine3D::MultiplyMatrixVector (Vec3D &input, Vec3D &output, mat4x4 &matrix) {
-    output.x = input.x * matrix.m[0][0] + input.y * matrix.m[1][0] + input.z * matrix.m[2][0] + matrix.m[3][0];
-    output.y = input.x * matrix.m[0][1] + input.y * matrix.m[1][1] + input.z * matrix.m[2][1] + matrix.m[3][1];
-    output.z = input.x * matrix.m[0][2] + input.y * matrix.m[1][2] + input.z * matrix.m[2][2] + matrix.m[3][2];
-    float w = input.x * matrix.m[0][3] + input.y * matrix.m[1][3] + input.z * matrix.m[2][3] + matrix.m[3][3];
-
-    if (w != 0.0f) {
-        output.x /= w; output.y /= w; output.z /= w;
-    }
 }

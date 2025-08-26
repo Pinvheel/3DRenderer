@@ -1,6 +1,7 @@
 #pragma once
 
 #include "structs.hpp"
+#include "math_utils.hpp"
 #include <SFML/Graphics.hpp>
 #include <cmath>
 
@@ -18,6 +19,4 @@ class Engine3D {
     mat4x4 matProj;
     float fTheta;
     sf::RenderWindow window;
-
-    void MultiplyMatrixVector(Vec3D &input, Vec3D &output, mat4x4 &matrix);
 };

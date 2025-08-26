@@ -9,7 +9,7 @@ Vec3D& Vec3D::operator+=(const float addend) {
 }
 
 // Rotates this triangle around the Z axis with the specified rotation matrix.
-Triangle Triangle::rotate(mat4x4 &matrix) {
+Triangle Triangle::rotate(const mat4x4 &matrix) {
     Triangle rotated;
     for (int i = 0; i < 3; i++) {
         MultiplyMatrixVector(p[i], rotated.p[i], matrix);

@@ -12,7 +12,7 @@ struct Vec3D {
 struct Triangle { 
     Vec3D p[3]; 
 
-    Triangle rotate(mat4x4 &matrix);
+    Triangle rotate(const mat4x4 &matrix);
 };
 
 struct Mesh { std::vector<Triangle> tris; };

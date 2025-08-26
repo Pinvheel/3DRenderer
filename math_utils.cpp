@@ -1,6 +1,6 @@
 #include "math_utils.hpp"
 
-void MultiplyMatrixVector (Vec3D &input, Vec3D &output, mat4x4 &matrix) {
+void MultiplyMatrixVector (Vec3D &input, Vec3D &output, const mat4x4 &matrix) {
     output.x = input.x * matrix.m[0][0] + input.y * matrix.m[1][0] + input.z * matrix.m[2][0] + matrix.m[3][0];
     output.y = input.x * matrix.m[0][1] + input.y * matrix.m[1][1] + input.z * matrix.m[2][1] + matrix.m[3][1];
     output.z = input.x * matrix.m[0][2] + input.y * matrix.m[1][2] + input.z * matrix.m[2][2] + matrix.m[3][2];

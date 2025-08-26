@@ -133,10 +133,9 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
         edges[5].position = sf::Vector2f(triProjected.p[0].x, triProjected.p[0].y);
 
         // Set color for all
-        for (int i = 0; i < 6; i++) edges[i].color = sf::Color::White;
+        for (int i = 0; i < 6; i++) edges[i].color = sf::Color::Red;
 
         window.draw(edges);
-
     }
     return true;
 }

@@ -19,6 +19,7 @@ struct Triangle {
     Triangle offsetZ(const float units);
 
     Triangle project(const mat4x4 &matrix);
+    void scale(float screenWidth, float screenHeight);
 };
 
 struct Mesh { std::vector<Triangle> tris; };

@@ -19,4 +19,5 @@ class Engine3D {
     mat4x4 matProj;
     float fTheta;
     sf::RenderWindow window;
+    Vec3D vCamera = { 0 };
 };

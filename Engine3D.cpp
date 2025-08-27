@@ -48,7 +48,7 @@ bool Engine3D::onUserCreate() {
     float fNear = 0.1f;
     float fFar = 1000.0f;
     float fFov = 90.0f;
-    float fAspectRatio = window.getSize().x / window.getSize().y;
+    float fAspectRatio = (float)window.getSize().x / (float)window.getSize().y;
     float fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
 
     matProj.m[0][0] = fAspectRatio * fFovRad;
@@ -92,6 +92,7 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
     matRotY.m[3][3] =  1.0f;
 
     Vec3D cubeCenter = {0.5f, 0.5f, 0.5f};
+
     // Draw triangles:
     for(auto tri : meshCube.tris) {
         Triangle triProjected, triTranslated, triRotatedZ, triRotatedZX;
@@ -101,41 +102,74 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
         // Rotate X Axis:
         triRotatedZX = triRotatedZ.rotate(matRotX);
 
-        //Offset (only to Z so we are not in the cube):
+        // Offset (only to Z so we are not in the cube):
         triTranslated = triRotatedZX.offsetZ(3.0f);
 
+        // Normals:
+        Vec3D normal, line1, line2;
+        line1.x = triTranslated.p[1].x - triTranslated.p[0].x;
+        line1.y = triTranslated.p[1].y - triTranslated.p[0].y;
+        line1.z = triTranslated.p[1].z - triTranslated.p[0].z;
+
+        line2.x = triTranslated.p[2].x - triTranslated.p[0].x;
+        line2.y = triTranslated.p[2].y - triTranslated.p[0].y;
+        line2.z = triTranslated.p[2].z - triTranslated.p[0].z;
+
+        normal.x = line1.y * line2.z - line1.z * line2.y;
+        normal.y = line1.z * line2.x - line1.x * line2.z;
+        normal.z = line1.x * line2.y - line1.y * line2.x;
+
+        float l = sqrtf(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
+        normal.x /= l; normal.y /= l; normal.z /= l;
+
+
         // Project triangles from 3D --> 2D
-        triProjected = triTranslated.project(matProj);
+        if (normal.x * (triTranslated.p[0].x - vCamera.x) + 
+            normal.y * (triTranslated.p[0].y - vCamera.y) +
+            normal.z * (triTranslated.p[0].z - vCamera.z) < 0.0f) {
+            
+            Vec3D light_direction = { 0.0f, 0.0f, -1.0f };
+            float l = sqrtf(light_direction.x*light_direction.x + light_direction.y*light_direction.y + light_direction.z*light_direction.z);
+            light_direction.x /= l; light_direction.y /= l; light_direction.z /= l;
 
-        // Scale into view 
-        triProjected.p[0].x += 1.0f; triProjected.p[0].y += 1.0f;
-        triProjected.p[1].x += 1.0f; triProjected.p[1].y += 1.0f;
-        triProjected.p[2].x += 1.0f; triProjected.p[2].y += 1.0f;
-        triProjected.p[0].x *= 0.5f * 800; // (IMPORTANT, 800s here represent screen parameters! change later!)
-        triProjected.p[0].y *= 0.5f * 800;
-        triProjected.p[1].x *= 0.5f * 800;
-        triProjected.p[1].y *= 0.5f * 800;
-        triProjected.p[2].x *= 0.5f * 800;
-        triProjected.p[2].y *= 0.5f * 800;
+            float dp = std::max(0.0f, normal.x*light_direction.x + normal.y*light_direction.y + normal.z*light_direction.z);
 
-        sf::VertexArray edges(sf::Lines, 6);
+            sf::Color shadedRed(sf::Uint8(255 * dp), sf::Uint8(0), sf::Uint8(0));
+            
+            triProjected = triTranslated.project(matProj);
 
-        // edge 1
-        edges[0].position = sf::Vector2f(triProjected.p[0].x, triProjected.p[0].y);
-        edges[1].position = sf::Vector2f(triProjected.p[1].x, triProjected.p[1].y);
+            // Scale into view 
+            triProjected.scale(800.0f, 800.0f);
 
-        // edge 2
-        edges[2].position = sf::Vector2f(triProjected.p[1].x, triProjected.p[1].y);
-        edges[3].position = sf::Vector2f(triProjected.p[2].x, triProjected.p[2].y);
+            // Wireframes
+            /*
+            sf::VertexArray edges(sf::Lines, 6);
 
-        // edge 3
-        edges[4].position = sf::Vector2f(triProjected.p[2].x, triProjected.p[2].y);
-        edges[5].position = sf::Vector2f(triProjected.p[0].x, triProjected.p[0].y);
+            // edge 1
+            edges[0].position = sf::Vector2f(triProjected.p[0].x, triProjected.p[0].y);
+            edges[1].position = sf::Vector2f(triProjected.p[1].x, triProjected.p[1].y);
 
-        // Set color for all
-        for (int i = 0; i < 6; i++) edges[i].color = sf::Color::Red;
+            // edge 2
+            edges[2].position = sf::Vector2f(triProjected.p[1].x, triProjected.p[1].y);
+            edges[3].position = sf::Vector2f(triProjected.p[2].x, triProjected.p[2].y);
 
-        window.draw(edges);
+            // edge 3
+            edges[4].position = sf::Vector2f(triProjected.p[2].x, triProjected.p[2].y);
+            edges[5].position = sf::Vector2f(triProjected.p[0].x, triProjected.p[0].y);
+
+            // Set color for all
+            for (int i = 0; i < 6; i++) edges[i].color = sf::Color::Red;
+
+            window.draw(edges);
+            */
+            
+            sf::VertexArray triangle(sf::Triangles, 3);
+            triangle[0].position = sf::Vector2f(triProjected.p[0].x, triProjected.p[0].y);
+            triangle[1].position = sf::Vector2f(triProjected.p[1].x, triProjected.p[1].y);
+            triangle[2].position = sf::Vector2f(triProjected.p[2].x, triProjected.p[2].y);
+            triangle[0].color = triangle[1].color = triangle[2].color = shadedRed;
+            window.draw(triangle);
+        }
     }
     return true;
 }

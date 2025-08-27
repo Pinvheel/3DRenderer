@@ -17,6 +17,7 @@ Triangle Triangle::rotate(const mat4x4 &matrix) {
     return rotated;
 }
 
+// Offsets the designated coordinate by the designated amount of units.
 Triangle Triangle::offsetX(const float units) {
     Triangle offset;
     for (int i = 0; i < 3; i++) {
@@ -41,10 +42,22 @@ Triangle Triangle::offsetZ(const float units) {
     return offset;
 }
 
+// Projects 3D triangle into a 2D triangle.
 Triangle Triangle::project(const mat4x4 &matrix) {
     Triangle projected;
     for (int i = 0; i < 3; i++) {
         MultiplyMatrixVector(p[i], projected.p[i], matrix);
     }
     return projected;
+}
+
+// Scales to the designated screenWidth and screenHeight (use literals for best results).
+void Triangle::scale(float screenWidth, float screenHeight) {
+    for (int i = 0; i < 3; i++) {
+        p[i].x += 1;
+        p[i].y += 1;
+
+        p[i].x *= 0.5 * screenWidth;
+        p[i].y *= 0.5 * screenHeight;
+    }
 }

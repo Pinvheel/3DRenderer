@@ -1,12 +1,11 @@
 #pragma once
 #include <vector>
+#include <string>
 
 struct mat4x4 { float m[4][4] = {}; };
 
 struct Vec3D {  
     float x, y, z; 
-
-    Vec3D& operator+=(const float addend);
 };
 
 struct Triangle { 
@@ -22,5 +21,9 @@ struct Triangle {
     void scale(float screenWidth, float screenHeight);
 };
 
-struct Mesh { std::vector<Triangle> tris; };
+struct Mesh { 
+    std::vector<Triangle> tris; 
+
+    bool loadObjectFromFile(std::string fileName);
+};
 

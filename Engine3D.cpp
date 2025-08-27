@@ -19,31 +19,7 @@ void Engine3D::run() {
 
 bool Engine3D::onUserCreate() {
     // meshCube is composed of 12 triangles, with points defined here:
-    meshCube.tris = {
-        // SOUTH
-        { -1.0f,-1.0f,-1.0f,   -1.0f, 1.0f,-1.0f,    1.0f, 1.0f,-1.0f },
-        { -1.0f,-1.0f,-1.0f,    1.0f, 1.0f,-1.0f,    1.0f,-1.0f,-1.0f },
-
-        // EAST
-        { 1.0f,-1.0f,-1.0f,     1.0f, 1.0f,-1.0f,    1.0f, 1.0f, 1.0f },
-        { 1.0f,-1.0f,-1.0f,     1.0f, 1.0f, 1.0f,    1.0f,-1.0f, 1.0f },
-
-        // NORTH
-        { 1.0f,-1.0f, 1.0f,     1.0f, 1.0f, 1.0f,   -1.0f, 1.0f, 1.0f },
-        { 1.0f,-1.0f, 1.0f,    -1.0f, 1.0f, 1.0f,   -1.0f,-1.0f, 1.0f },
-
-        // WEST
-        { -1.0f,-1.0f, 1.0f,   -1.0f, 1.0f, 1.0f,   -1.0f, 1.0f,-1.0f },
-        { -1.0f,-1.0f, 1.0f,   -1.0f, 1.0f,-1.0f,   -1.0f,-1.0f,-1.0f },
-
-        // TOP
-        { -1.0f, 1.0f,-1.0f,   -1.0f, 1.0f, 1.0f,    1.0f, 1.0f, 1.0f },
-        { -1.0f, 1.0f,-1.0f,    1.0f, 1.0f, 1.0f,    1.0f, 1.0f,-1.0f },
-
-        // BOTTOM
-        { 1.0f,-1.0f, 1.0f,    -1.0f,-1.0f, 1.0f,   -1.0f,-1.0f,-1.0f },
-        { 1.0f,-1.0f, 1.0f,    -1.0f,-1.0f,-1.0f,    1.0f,-1.0f,-1.0f },
-    };
+    meshCube.loadObjectFromFile("VideoShip.obj");
 
     float fNear = 0.1f;
     float fFar = 1000.0f;
@@ -103,7 +79,7 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
         triRotatedZX = triRotatedZ.rotate(matRotX);
 
         // Offset (only to Z so we are not in the cube):
-        triTranslated = triRotatedZX.offsetZ(3.0f);
+        triTranslated = triRotatedZX.offsetZ(8.0f);
 
         // Normals:
         Vec3D normal, line1, line2;
@@ -122,17 +98,19 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
         float l = sqrtf(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
         normal.x /= l; normal.y /= l; normal.z /= l;
 
+        // Turn this into a function later!
+        float xComp = normal.x * (triTranslated.p[0].x - vCamera.x);
+        float yComp = normal.y * (triTranslated.p[0].y - vCamera.y);
+        float zComp = normal.z * (triTranslated.p[0].z - vCamera.z);
+        bool isFacingCamera = xComp + yComp + zComp < 0.0f;
 
         // Project triangles from 3D --> 2D
-        if (normal.x * (triTranslated.p[0].x - vCamera.x) + 
-            normal.y * (triTranslated.p[0].y - vCamera.y) +
-            normal.z * (triTranslated.p[0].z - vCamera.z) < 0.0f) {
-            
+        if (isFacingCamera) {
             Vec3D light_direction = { 0.0f, 0.0f, -1.0f };
-            float l = sqrtf(light_direction.x*light_direction.x + light_direction.y*light_direction.y + light_direction.z*light_direction.z);
+            float l = sqrtf(light_direction.x * light_direction.x + light_direction.y * light_direction.y + light_direction.z * light_direction.z);
             light_direction.x /= l; light_direction.y /= l; light_direction.z /= l;
 
-            float dp = std::max(0.0f, normal.x*light_direction.x + normal.y*light_direction.y + normal.z*light_direction.z);
+            float dp = std::max(0.0f, normal.x * light_direction.x + normal.y * light_direction.y + normal.z * light_direction.z);
 
             sf::Color shadedRed(sf::Uint8(255 * dp), sf::Uint8(0), sf::Uint8(0));
             

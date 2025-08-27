@@ -1,12 +1,8 @@
 #include "structs.hpp"
 #include "math_utils.hpp"
-
-Vec3D& Vec3D::operator+=(const float addend) {
-    x += addend;
-    y += addend;
-    z += addend;
-    return *this;
-}
+#include <fstream>
+#include <exception>
+#include <sstream>
 
 // Rotates this triangle around the Z axis with the specified rotation matrix.
 Triangle Triangle::rotate(const mat4x4 &matrix) {
@@ -60,4 +56,33 @@ void Triangle::scale(float screenWidth, float screenHeight) {
         p[i].x *= 0.5 * screenWidth;
         p[i].y *= 0.5 * screenHeight;
     }
+}
+
+bool Mesh::loadObjectFromFile(std::string fileName) {
+    std::ifstream file(fileName);
+    if (!file.is_open()) {
+        throw std::exception();
+    }
+
+    std::vector<Vec3D> verts;
+    while (!file.eof()) {
+        char line[128];
+        file.getline(line, 128);
+
+        std::stringstream s;
+        s << line;
+
+        char junk;
+        if(line[0] == 'v') {
+            Vec3D v;
+			s >> junk >> v.x >> v.y >> v.z;
+			verts.push_back(v);
+        }
+        if (line[0] == 'f') {
+            int f[3];
+            s >> junk >> f[0] >> f[1] >> f[2];
+            tris.push_back({ verts[f[0] - 1], verts[f[1] - 1], verts[f[2] - 1] });
+        }
+    }
+    return true;
 }

@@ -1,13 +1,8 @@
 #pragma once
-#include <vector>
-#include <string>
+
+#include "Vec3D.hpp"
+#include "mat4x4.hpp"
 #include <SFML/Graphics.hpp>
-
-struct mat4x4 { float m[4][4] = {}; };
-
-struct Vec3D {  
-    float x, y, z; 
-};
 
 struct Triangle { 
     Vec3D p[3];
@@ -23,12 +18,5 @@ struct Triangle {
     Triangle project(const mat4x4 &matrix);
     Vec3D calculateNormal();
     void scale(float screenWidth, float screenHeight);
-    bool isFacingCamera(const Vec3D &normal);
+    bool isFacingCamera(const Vec3D &normal, const Vec3D &cameraPos);
 };
-
-struct Mesh { 
-    std::vector<Triangle> tris; 
-
-    bool loadObjectFromFile(std::string fileName);
-};
-

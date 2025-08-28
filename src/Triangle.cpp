@@ -1,8 +1,5 @@
-#include "structs.hpp"
+#include "Triangle.hpp"
 #include "math_utils.hpp"
-#include <fstream>
-#include <exception>
-#include <sstream>
 #include <cmath>
 
 // Rotates this triangle around the Z axis with the specified rotation matrix.
@@ -89,36 +86,12 @@ void Triangle::scale(float screenWidth, float screenHeight) {
     }
 }
 
-// Determines if this normal is facing the camera
-bool Triangle::isFacingCamera(const Vec3D &normal) {
-    return true;
+// Determines if this normal is facing the camera.
+bool Triangle::isFacingCamera(const Vec3D &normal, const Vec3D &cameraPos) {
+    float xComp = normal.x * (p[0].x - cameraPos.x);
+    float yComp = normal.y * (p[0].y - cameraPos.y);
+    float zComp = normal.z * (p[0].z - cameraPos.z);
+    bool isFacingCamera = xComp + yComp + zComp < 0.0f;
+    return isFacingCamera;
 }
-
-bool Mesh::loadObjectFromFile(std::string fileName) {
-    std::ifstream file(fileName);
-    if (!file.is_open()) {
-        throw std::exception();
-    }
-
-    std::vector<Vec3D> verts;
-    while (!file.eof()) {
-        char line[128];
-        file.getline(line, 128);
-
-        std::stringstream s;
-        s << line;
-
-        char junk;
-        if(line[0] == 'v') {
-            Vec3D v;
-			s >> junk >> v.x >> v.y >> v.z;
-			verts.push_back(v);
-        }
-        if (line[0] == 'f') {
-            int f[3];
-            s >> junk >> f[0] >> f[1] >> f[2];
-            tris.push_back({ verts[f[0] - 1], verts[f[1] - 1], verts[f[2] - 1] });
-        }
-    }
-    return true;
-}
+ 

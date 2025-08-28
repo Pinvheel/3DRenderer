@@ -1,4 +1,6 @@
 #include "Engine3D.hpp"
+#include <cmath>
+#include <algorithm>
 
 Engine3D::Engine3D() : window(sf::VideoMode(800, 800), "SFML Renderer") { onUserCreate(); }
 
@@ -19,7 +21,7 @@ void Engine3D::run() {
 
 bool Engine3D::onUserCreate() {
     // meshCube is composed of 12 triangles, with points defined here:
-    meshCube.loadObjectFromFile("VideoShip.obj");
+    meshCube.loadObjectFromFile("assets/VideoShip.obj");
 
     float fNear = 0.1f;
     float fFar = 1000.0f;
@@ -67,8 +69,6 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
     matRotY.m[2][2] =  cosf(fTheta * 0.5f);
     matRotY.m[3][3] =  1.0f;
 
-    Vec3D cubeCenter = {0.5f, 0.5f, 0.5f};
-
     std::vector<Triangle> trianglesToRaster;
 
     // Draw triangles:
@@ -86,14 +86,8 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
         // Normals:
         Vec3D normal = triTranslated.calculateNormal();
 
-        // Turn this into a function later!
-        float xComp = normal.x * (triTranslated.p[0].x - vCamera.x);
-        float yComp = normal.y * (triTranslated.p[0].y - vCamera.y);
-        float zComp = normal.z * (triTranslated.p[0].z - vCamera.z);
-        bool isFacingCamera = xComp + yComp + zComp < 0.0f;
-
         // Project triangles from 3D --> 2D
-        if (isFacingCamera) {
+        if (triTranslated.isFacingCamera(normal, vCamera)) {
             Vec3D light_direction = { 0.0f, 0.0f, -1.0f };
             float l = sqrtf(light_direction.x * light_direction.x + light_direction.y * light_direction.y + light_direction.z * light_direction.z);
             light_direction.x /= l; light_direction.y /= l; light_direction.z /= l;
@@ -108,7 +102,7 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
             // Scale into view 
             triProjected.scale(800.0f, 800.0f);
 
-            // Wireframes
+            // Wireframes (Outdated, does not work with sort)
             /*
             sf::VertexArray edges(sf::Lines, 6);
 

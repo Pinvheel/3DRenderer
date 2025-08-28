@@ -1,10 +1,6 @@
 #pragma once
 
-#include "structs.hpp"
-#include "math_utils.hpp"
-#include <SFML/Graphics.hpp>
-#include <cmath>
-#include <algorithm>
+#include "Mesh.hpp"
 
 class Engine3D {
  public:
@@ -20,5 +16,5 @@ class Engine3D {
     mat4x4 matProj;
     float fTheta;
     sf::RenderWindow window;
-    Vec3D vCamera = { 0 };
+    Vec3D vCamera = { 0, 0, 0 };
 };

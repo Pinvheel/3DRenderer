@@ -69,6 +69,8 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
 
     Vec3D cubeCenter = {0.5f, 0.5f, 0.5f};
 
+    std::vector<Triangle> trianglesToRaster;
+
     // Draw triangles:
     for(auto tri : meshCube.tris) {
         Triangle triProjected, triTranslated, triRotatedZ, triRotatedZX;
@@ -82,21 +84,7 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
         triTranslated = triRotatedZX.offsetZ(8.0f);
 
         // Normals:
-        Vec3D normal, line1, line2;
-        line1.x = triTranslated.p[1].x - triTranslated.p[0].x;
-        line1.y = triTranslated.p[1].y - triTranslated.p[0].y;
-        line1.z = triTranslated.p[1].z - triTranslated.p[0].z;
-
-        line2.x = triTranslated.p[2].x - triTranslated.p[0].x;
-        line2.y = triTranslated.p[2].y - triTranslated.p[0].y;
-        line2.z = triTranslated.p[2].z - triTranslated.p[0].z;
-
-        normal.x = line1.y * line2.z - line1.z * line2.y;
-        normal.y = line1.z * line2.x - line1.x * line2.z;
-        normal.z = line1.x * line2.y - line1.y * line2.x;
-
-        float l = sqrtf(normal.x * normal.x + normal.y * normal.y + normal.z * normal.z);
-        normal.x /= l; normal.y /= l; normal.z /= l;
+        Vec3D normal = triTranslated.calculateNormal();
 
         // Turn this into a function later!
         float xComp = normal.x * (triTranslated.p[0].x - vCamera.x);
@@ -113,6 +101,7 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
             float dp = std::max(0.0f, normal.x * light_direction.x + normal.y * light_direction.y + normal.z * light_direction.z);
 
             sf::Color shadedRed(sf::Uint8(255 * dp), sf::Uint8(0), sf::Uint8(0));
+            
             
             triProjected = triTranslated.project(matProj);
 
@@ -140,14 +129,24 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
 
             window.draw(edges);
             */
-            
-            sf::VertexArray triangle(sf::Triangles, 3);
-            triangle[0].position = sf::Vector2f(triProjected.p[0].x, triProjected.p[0].y);
-            triangle[1].position = sf::Vector2f(triProjected.p[1].x, triProjected.p[1].y);
-            triangle[2].position = sf::Vector2f(triProjected.p[2].x, triProjected.p[2].y);
-            triangle[0].color = triangle[1].color = triangle[2].color = shadedRed;
-            window.draw(triangle);
+            triProjected.color = shadedRed;
+            trianglesToRaster.push_back(triProjected);
         }
+    }
+
+    std::sort(trianglesToRaster.begin(), trianglesToRaster.end(), [](Triangle &t1, Triangle &t2){
+        float z1 = (t1.p[0].z + t1.p[1].z + t1.p[2].z) / 3.0f;
+        float z2 = (t2.p[0].z + t2.p[1].z + t2.p[2].z) / 3.0f;
+        return z1 > z2;
+    });
+
+    for (auto triProjected : trianglesToRaster) {
+        sf::VertexArray triangle(sf::Triangles, 3);
+        triangle[0].position = sf::Vector2f(triProjected.p[0].x, triProjected.p[0].y);
+        triangle[1].position = sf::Vector2f(triProjected.p[1].x, triProjected.p[1].y);
+        triangle[2].position = sf::Vector2f(triProjected.p[2].x, triProjected.p[2].y);
+        triangle[0].color = triangle[1].color = triangle[2].color = triProjected.color; //shadedRed;
+        window.draw(triangle);
     }
     return true;
 }

@@ -4,6 +4,7 @@
 #include "math_utils.hpp"
 #include <SFML/Graphics.hpp>
 #include <cmath>
+#include <algorithm>
 
 class Engine3D {
  public:

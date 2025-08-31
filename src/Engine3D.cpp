@@ -21,7 +21,7 @@ void Engine3D::run() {
 
 bool Engine3D::onUserCreate() {
     // meshCube is composed of 12 triangles, with points defined here:
-    meshCube.loadObjectFromFile("assets/VideoShip.obj");
+    meshCube.loadObjectFromFile("assets/axis.obj");
 
     float fNear = 0.1f;
     float fFar = 1000.0f;
@@ -29,75 +29,91 @@ bool Engine3D::onUserCreate() {
     float fAspectRatio = (float)window.getSize().x / (float)window.getSize().y;
     float fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
 
-    matProj.m[0][0] = fAspectRatio * fFovRad;
-    matProj.m[1][1] = fFovRad;
-    matProj.m[2][2] = fFar / (fFar - fNear);
-    matProj.m[3][2] = (-fFar * fNear) / (fFar - fNear);
-    matProj.m[2][3] = 1.0f;
-    matProj.m[3][3] = 0.0f;
+    matProj = makeProjection(fFov, fAspectRatio, fNear, fFar);
 
     return true;
 }
 
 bool Engine3D::onUserUpdate(float fElapsedTime) {
+    // Up and down are swapped because of SFML window dimensions.
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Up)) {
+        vCamera.y += 8.0f * fElapsedTime;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
+        vCamera.y -= 8.0f * fElapsedTime;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+        vCamera.x -= 8.0f * fElapsedTime;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+        vCamera.x += 8.0f * fElapsedTime;
+    }    
+
     window.clear(sf::Color::Black);
     // Set up rotation matrices
     mat4x4 matRotZ, matRotX, matRotY;
-    fTheta += 1.0f * fElapsedTime;
-
-    // Rotation Z
-    matRotZ.m[0][0] = cosf(fTheta);
-    matRotZ.m[0][1] = sinf(fTheta);
-    matRotZ.m[1][0] = -sinf(fTheta);
-    matRotZ.m[1][1] = cosf(fTheta);
-    matRotZ.m[2][2] = 1;
-    matRotZ.m[3][3] = 1;
+    // fTheta += 1.0f * fElapsedTime;
 
     // Rotation X
-    matRotX.m[0][0] = 1;
-    matRotX.m[1][1] = cosf(fTheta * 0.5f);
-    matRotX.m[1][2] = sinf(fTheta * 0.5f);
-    matRotX.m[2][1] = -sinf(fTheta * 0.5f);
-    matRotX.m[2][2] = cosf(fTheta * 0.5f);
-    matRotX.m[3][3] = 1;
-
+    matRotX = makeRotationX(fTheta);
     // Rotation Y
-    matRotY.m[0][0] =  cosf(fTheta * 0.5f);
-    matRotY.m[0][2] =  sinf(fTheta * 0.5f);
-    matRotY.m[1][1] =  1.0f;
-    matRotY.m[2][0] = -sinf(fTheta * 0.5f);
-    matRotY.m[2][2] =  cosf(fTheta * 0.5f);
-    matRotY.m[3][3] =  1.0f;
+    matRotY = makeRotationY(fTheta);
+    // Rotation Z
+    matRotZ = makeRotationZ(fTheta);
 
+    mat4x4 matTrans;
+    matTrans = makeTranslation(0.0f, 0.0f, 10.0f);
+
+    mat4x4 matWorld;
+    matWorld = makeIdentity();
+    matWorld = multiplyMatrix(matRotZ, matRotX);
+    matWorld = multiplyMatrix(matWorld, matTrans);
+
+    vLookDir = { 0, 0, 1 };
+    Vec3D vUp = { 0, 1, 0 };
+    Vec3D vTarget = vCamera + vLookDir;
+    mat4x4 matCamera = pointAt(vCamera, vTarget, vUp);
+    mat4x4 matView = quickInverse(matCamera);
     std::vector<Triangle> trianglesToRaster;
 
     // Draw triangles:
     for(auto tri : meshCube.tris) {
-        Triangle triProjected, triTranslated, triRotatedZ, triRotatedZX;
-        // Rotate Z Axis:
-        triRotatedZ = tri.rotate(matRotZ);
+        Triangle triProjected, triTranslated, triViewed, triTransformed;
 
+        triTransformed.p[0] = tri.p[0] * matWorld; // Matrix_MultiplyVector(matWorld, tri.p[0]);
+        triTransformed.p[1] = tri.p[1] * matWorld; // Matrix_MultiplyVector(matWorld, tri.p[1]);
+        triTransformed.p[2] = tri.p[2] * matWorld; // Matrix_MultiplyVector(matWorld, tri.p[2]);
         // Rotate X Axis:
-        triRotatedZX = triRotatedZ.rotate(matRotX);
-
+        // tri = tri.rotate(matRotX);
+        // Rotate Y Axis:
+        // tri = tri.rotate(matRotY);
+        // Rotate Z Axis:
+        // tri = tri.rotate(matRotZ);
         // Offset (only to Z so we are not in the cube):
-        triTranslated = triRotatedZX.offsetZ(8.0f);
+        triTranslated = triTransformed.offset({0.0f, 0.0f, 5.0f});
 
         // Normals:
         Vec3D normal = triTranslated.calculateNormal();
 
+        Vec3D vCameraRay = triTranslated.p[0] - vCamera;
+
         // Project triangles from 3D --> 2D
-        if (triTranslated.isFacingCamera(normal, vCamera)) {
+        // triTranslated.isFacingCamera(normal, vCamera)
+        if (normal.dotProduct(vCameraRay) < 0.0f) {
             Vec3D light_direction = { 0.0f, 0.0f, -1.0f };
             float l = sqrtf(light_direction.x * light_direction.x + light_direction.y * light_direction.y + light_direction.z * light_direction.z);
             light_direction.x /= l; light_direction.y /= l; light_direction.z /= l;
 
-            float dp = std::max(0.0f, normal.x * light_direction.x + normal.y * light_direction.y + normal.z * light_direction.z);
+            float dp = std::max(0.1f, normal.x * light_direction.x + normal.y * light_direction.y + normal.z * light_direction.z);
 
             sf::Color shadedRed(sf::Uint8(255 * dp), sf::Uint8(0), sf::Uint8(0));
             
-            
-            triProjected = triTranslated.project(matProj);
+            // Tri viewed is bugged, find out why !!!
+            triViewed.p[0] = triTranslated.p[0] * matView;
+            triViewed.p[1] = triTranslated.p[1] * matView;
+            triViewed.p[2] = triTranslated.p[2] * matView;
+
+            triProjected = triViewed.project(matProj);
 
             // Scale into view 
             triProjected.scale(800.0f, 800.0f);

@@ -17,4 +17,5 @@ class Engine3D {
     float fTheta;
     sf::RenderWindow window;
     Vec3D vCamera = { 0, 0, 0 };
+    Vec3D vLookDir;
 };

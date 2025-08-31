@@ -12,36 +12,12 @@ Triangle Triangle::rotate(const mat4x4 &matrix) {
 }
 
 // Offsets the designated coordinate by the designated amount of units.
-Triangle Triangle::offsetX(const float units) {
-    Triangle offset;
-    for (int i = 0; i < 3; i++) {
-        offset.p[i].x = p[i].x + units;
-    }
-    return offset;
-}
-
-Triangle Triangle::offsetY(const float units) {
-    Triangle offset;
-    for (int i = 0; i < 3; i++) {
-        offset.p[i].y = p[i].y + units;
-    }
-    return offset;
-}
-
-Triangle Triangle::offsetZ(const float units) {
-    Triangle offset;
-    for (int i = 0; i < 3; i++) {
-        offset.p[i].z = p[i].z + units;
-    }
-    return offset;
-}
-
 Triangle Triangle::offset(const Vec3D units) {
     Triangle offset;
     for (int i = 0; i < 3; i++) {
         offset.p[i].x = p[i].x + units.x;
-        offset.p[i].y = p[i].x + units.y;
-        offset.p[i].z = p[i].x + units.z;
+        offset.p[i].y = p[i].y + units.y;
+        offset.p[i].z = p[i].z + units.z;
     }
     return offset;
 }

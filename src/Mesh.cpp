@@ -1,6 +1,7 @@
 #include "Mesh.hpp"
 #include <fstream>
 #include <sstream>
+#include <string>
 
 bool Mesh::loadObjectFromFile(std::string fileName) {
     std::ifstream file(fileName);
@@ -9,10 +10,8 @@ bool Mesh::loadObjectFromFile(std::string fileName) {
     }
 
     std::vector<Vec3D> verts;
-    while (!file.eof()) {
-        char line[128];
-        file.getline(line, 128);
-
+    std::string line;
+    while (std::getline(file, line)) {
         std::stringstream s;
         s << line;
 
@@ -25,7 +24,7 @@ bool Mesh::loadObjectFromFile(std::string fileName) {
         if (line[0] == 'f') {
             int f[3];
             s >> junk >> f[0] >> f[1] >> f[2];
-            tris.push_back({ verts[f[0] - 1], verts[f[1] - 1], verts[f[2] - 1] });
+            tris.push_back({ verts[f[0] - 1], verts[f[1] - 1], verts[f[2] - 1], sf::Color::Red});
         }
     }
     return true;

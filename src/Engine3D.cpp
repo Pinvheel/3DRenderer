@@ -27,7 +27,7 @@ bool Engine3D::onUserCreate() {
     float fFar = 1000.0f;
     float fFov = 90.0f;
     float fAspectRatio = (float)window.getSize().x / (float)window.getSize().y;
-    float fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
+    // float fFovRad = 1.0f / tanf(fFov * 0.5f / 180.0f * 3.14159f);
 
     matProj = makeProjection(fFov, fAspectRatio, fNear, fFar);
 
@@ -42,12 +42,28 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
     if (sf::Keyboard::isKeyPressed(sf::Keyboard::Down)) {
         vCamera.y -= 8.0f * fElapsedTime;
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || sf::Keyboard::isKeyPressed(sf::Keyboard::A)) {
         vCamera.x -= 8.0f * fElapsedTime;
     }
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right)) {
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || sf::Keyboard::isKeyPressed(sf::Keyboard::D)) {
         vCamera.x += 8.0f * fElapsedTime;
-    }    
+    }
+
+    Vec3D vForward = vLookDir * (8.0f * fElapsedTime);
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::W)) {
+        vCamera = vCamera + vForward;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::S)) {
+        vCamera = vCamera - vForward;
+    }
+
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Q)) {
+        fYaw += 2.0f * fElapsedTime;
+    }
+    if (sf::Keyboard::isKeyPressed(sf::Keyboard::E)) {
+        fYaw -= 2.0f * fElapsedTime;
+    }
 
     window.clear(sf::Color::Black);
     // Set up rotation matrices
@@ -69,9 +85,11 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
     matWorld = multiplyMatrix(matRotZ, matRotX);
     matWorld = multiplyMatrix(matWorld, matTrans);
 
-    vLookDir = { 0, 0, 1 };
     Vec3D vUp = { 0, 1, 0 };
-    Vec3D vTarget = vCamera + vLookDir;
+    Vec3D vTarget = { 0, 0, 1 };
+    mat4x4 matCameraRot = makeRotationY(fYaw);
+    vLookDir = vTarget * matCameraRot;
+    vTarget = vCamera + vLookDir;
     mat4x4 matCamera = pointAt(vCamera, vTarget, vUp);
     mat4x4 matView = quickInverse(matCamera);
     std::vector<Triangle> trianglesToRaster;
@@ -90,14 +108,13 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
         // Rotate Z Axis:
         // tri = tri.rotate(matRotZ);
         // Offset (only to Z so we are not in the cube):
-        triTranslated = triTransformed.offset({0.0f, 0.0f, 5.0f});
+        triTranslated = triTransformed;  //.offset({0.0f, 0.0f, 5.0f});
 
         // Normals:
         Vec3D normal = triTranslated.calculateNormal();
 
         Vec3D vCameraRay = triTranslated.p[0] - vCamera;
 
-        // Project triangles from 3D --> 2D
         // triTranslated.isFacingCamera(normal, vCamera)
         if (normal.dotProduct(vCameraRay) < 0.0f) {
             Vec3D light_direction = { 0.0f, 0.0f, -1.0f };
@@ -113,7 +130,60 @@ bool Engine3D::onUserUpdate(float fElapsedTime) {
             triViewed.p[1] = triTranslated.p[1] * matView;
             triViewed.p[2] = triTranslated.p[2] * matView;
 
+            // Clip Viewed Triangle against near plane, this could form two additional
+            // additional triangles. 
+            // int nClippedTriangles = 0;
+            // Triangle clipped[2];
+            // nClippedTriangles = Triangle_ClipAgainstPlane({ 0.0f, 0.0f, 0.1f }, { 0.0f, 0.0f, 1.0f }, triViewed, clipped[0], clipped[1]);
+
+            // We may end up with multiple triangles form the clip, so project as
+            // required
+            /*
+            for (int n = 0; n < nClippedTriangles; n++)
+            {
+                // Project triangles from 3D --> 2D
+                triProjected.p[0] = clipped[n].p[0] * matProj;  // Matrix_MultiplyVector(matProj, clipped[n].p[0]);
+                triProjected.p[1] = clipped[n].p[1] * matProj;  // Matrix_MultiplyVector(matProj, clipped[n].p[1]);
+                triProjected.p[2] = clipped[n].p[2] * matProj;  // Matrix_MultiplyVector(matProj, clipped[n].p[2]);
+                triProjected.color = clipped[n].color;
+
+                // Scale into view, we moved the normalising into cartesian space
+                // out of the matrix.vector function from the previous videos, so
+                // do this manually
+                triProjected.p[0] = triProjected.p[0] / triProjected.p[0].w;  // Vector_Div(triProjected.p[0], triProjected.p[0].w);
+                triProjected.p[1] = triProjected.p[1] / triProjected.p[1].w;  // Vector_Div(triProjected.p[1], triProjected.p[1].w);
+                triProjected.p[2] = triProjected.p[2] / triProjected.p[2].w;  // Vector_Div(triProjected.p[2], triProjected.p[2].w);
+
+                // X/Y are inverted so put them back
+                triProjected.p[0].x *= -1.0f;
+                triProjected.p[1].x *= -1.0f;
+                triProjected.p[2].x *= -1.0f;
+                triProjected.p[0].y *= -1.0f;
+                triProjected.p[1].y *= -1.0f;
+                triProjected.p[2].y *= -1.0f;
+
+                // Offset verts into visible normalised space
+                Vec3D vOffsetView = { 1,1,0 };
+                triProjected.p[0] = triProjected.p[0] + vOffsetView;  // Vector_Add(triProjected.p[0], vOffsetView);
+                triProjected.p[1] = triProjected.p[1] + vOffsetView;  // Vector_Add(triProjected.p[1], vOffsetView);
+                triProjected.p[2] = triProjected.p[2] + vOffsetView;  // Vector_Add(triProjected.p[2], vOffsetView);
+                triProjected.p[0].x *= 0.5f * 800;
+                triProjected.p[0].y *= 0.5f * 800;
+                triProjected.p[1].x *= 0.5f * 800;
+                triProjected.p[1].y *= 0.5f * 800;
+                triProjected.p[2].x *= 0.5f * 800;
+                triProjected.p[2].y *= 0.5f * 800;
+
+                // Store triangle for sorting
+                triProjected.color = shadedRed;
+                trianglesToRaster.push_back(triProjected);
+            }
+            */
             triProjected = triViewed.project(matProj);
+
+            triProjected.p[0] = triProjected.p[0] / triProjected.p[0].w;
+            triProjected.p[1] = triProjected.p[1] / triProjected.p[1].w;
+            triProjected.p[2] = triProjected.p[2] / triProjected.p[2].w;
 
             // Scale into view 
             triProjected.scale(800.0f, 800.0f);

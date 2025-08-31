@@ -19,3 +19,5 @@ Vec3D operator-(const Vec3D &lhs, const Vec3D &rhs);
 Vec3D operator*(const Vec3D &lhs, const float k);
 Vec3D operator*(const Vec3D &vector, const mat4x4 &matrix);
 Vec3D operator/(const Vec3D &lhs, const float k);
+
+Vec3D intersectPlane(Vec3D &plane_p, Vec3D &plane_n, Vec3D &lineStart, Vec3D &lineEnd);

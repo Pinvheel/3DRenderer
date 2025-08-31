@@ -15,6 +15,7 @@ class Engine3D {
     Mesh meshCube;
     mat4x4 matProj;
     float fTheta;
+    float fYaw;
     sf::RenderWindow window;
     Vec3D vCamera = { 0, 0, 0 };
     Vec3D vLookDir;

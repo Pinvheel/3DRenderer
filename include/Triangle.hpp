@@ -20,3 +20,5 @@ struct Triangle {
     void scale(float screenWidth, float screenHeight);
     bool isFacingCamera(const Vec3D &normal, const Vec3D &cameraPos);
 };
+
+int Triangle_ClipAgainstPlane(Vec3D plane_p, Vec3D plane_n, Triangle &in_tri, Triangle &out_tri1, Triangle &out_tri2);
